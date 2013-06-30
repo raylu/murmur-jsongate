@@ -99,6 +99,7 @@ class ServerAuthenticatorI(Murmur.ServerAuthenticator):
 	def getInfo(self, id, current=None):
 		""" Return (true/false) depending on availability of information, plus
 		a dictionary of user information. """
+		return False, {}
 
 		try:
 			return (True, dict(filter(lambda (k,v): k in self.known_user_info, self.get_user_info(id).items())))
