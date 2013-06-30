@@ -20,15 +20,13 @@ import Ice, sys, os
 from murmur import Murmur
 from murmur.json.authenticator import ServerAuthenticatorI
 
+def ice_auth(obj):
+	return obj.ice_context({'secret': 'b'})
+
 def add_authenticator(server, adapter):
 	authenticator = ServerAuthenticatorI(server, adapter)
-
-	# This is one of the configuration possibilites, setting a base URL for
-	# your authentication server. This might as well be HTTPS, include an
-	# initial path, ... as long as it speaks HTTP and is supported by urllib2.
-	authenticator.base_uri = 'http://localhost:10000/'
-
 	server_authenticator = Murmur.ServerAuthenticatorPrx.uncheckedCast(adapter.addWithUUID(authenticator))
+	server_authenticator = ice_auth(server_authenticator)
 	server.setAuthenticator(server_authenticator)
 
 class MetaCallbackI(Murmur.MetaCallback):
@@ -41,9 +39,11 @@ class MetaCallbackI(Murmur.MetaCallback):
 if __name__ == "__main__":
 	ice = Ice.initialize(sys.argv)
 	meta = Murmur.MetaPrx.checkedCast(ice.stringToProxy('Meta:tcp -h 127.0.0.1 -p 6502'))
+	meta = ice_auth(meta)
 	adapter = ice.createObjectAdapterWithEndpoints("Callback.Client", "tcp -h 127.0.0.1")
 	adapter.activate()
 	for server in meta.getBootedServers():
+		server = ice_auth(server)
 		add_authenticator(server, adapter)
 
 	try:
