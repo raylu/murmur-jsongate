@@ -26,7 +26,6 @@ class ServerAuthenticatorI(Murmur.ServerAuthenticator):
 		self.known_user_info = ('UserName', 'UserEmail', 'UserComment', 'UserHash', 'UserPassword')
 		self.auth_api_token = "Just Made It Up"
 
-
 	def authenticate(self, name, pw, certificates, certhash, certstrong, current=None):
 		""" Returns ID (0, -1, -2), newname, groups """
 
@@ -43,17 +42,7 @@ class ServerAuthenticatorI(Murmur.ServerAuthenticator):
 		try:
 			req = urllib2.Request(self.base_uri, request_string)
 			f = urllib2.urlopen(url=req)
-			user_info = json.read(f.read())
-		except urllib2.URLError, e:
-			print "Could not connect to authentication server: %s, falling through." % e.reason
-			return RET_FALLTHROUGH
-		except urllib2.HTTPError, e:
-			if e.code == httplib.UNAUTHORIZED:
-				print "Authentication failed for user %s, access denied." % name
-				return RET_DENIED
-			else:
-				print "Unhandled authentication server response %d, falling through." % e.code
-				return RET_FALLTHROUGH
+			user_info = json.load(f)
 		except:
 			traceback.print_exc()
 			return RET_FALLTHROUGH
@@ -63,11 +52,11 @@ class ServerAuthenticatorI(Murmur.ServerAuthenticator):
 			return RET_FALLTHROUGH
 
 		newname = ""
-		if isinstance(user_info.get('newname'), str):
+		if isinstance(user_info.get('newname'), basestring):
 			newname = user_info['newname']
 		groups = []
 		if isinstance(user_info.get('groups'), list):
-			groups = filter(lambda g: isinstance(g, str), user_info['groups'])
+			groups = filter(lambda g: isinstance(g, basestring), user_info['groups'])
 
 		return user_info['id'], newname, groups
 
@@ -126,7 +115,6 @@ class ServerAuthenticatorI(Murmur.ServerAuthenticator):
 
 		except UserNotFoundError:
 			return ""
-
 
 	def idToTexture(self, id, corrent=None):
 		"""Return the texture as a raw bytestream.
